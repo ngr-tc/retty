@@ -1,21 +1,15 @@
 use super::*;
 
 /// A Bootstrap that makes it easy to bootstrap a pipeline to use for TCP clients.
-pub struct BootstrapTcpClient<W> {
-    bootstrap_tcp: BootstrapTcp<W>,
+pub struct BootstrapTcpClient<W, E: LocalExecutor + 'static> {
+    bootstrap_tcp: BootstrapTcp<W, E>,
 }
 
-impl<W: 'static> Default for BootstrapTcpClient<W> {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl<W: 'static> BootstrapTcpClient<W> {
+impl<W: 'static, E: LocalExecutor + 'static> BootstrapTcpClient<W, E> {
     /// Creates a new BootstrapTcpClient
-    pub fn new() -> Self {
+    pub fn new(e: E) -> Self {
         Self {
-            bootstrap_tcp: BootstrapTcp::new(),
+            bootstrap_tcp: BootstrapTcp::new(e),
         }
     }
 

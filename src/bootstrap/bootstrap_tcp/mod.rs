@@ -4,24 +4,21 @@ use smol::{
     net::{AsyncToSocketAddrs, TcpListener, TcpStream},
     Timer,
 };
+use crate::executor::LocalExecutor;
 
 pub(crate) mod bootstrap_tcp_client;
 pub(crate) mod bootstrap_tcp_server;
 
-struct BootstrapTcp<W> {
+struct BootstrapTcp<W, E: LocalExecutor + 'static> {
     boostrap: Bootstrap<W>,
+    executor: E,
 }
 
-impl<W: 'static> Default for BootstrapTcp<W> {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl<W: 'static> BootstrapTcp<W> {
-    fn new() -> Self {
+impl<W: 'static, E: LocalExecutor + 'static> BootstrapTcp<W, E> {
+    fn new(executor: E) -> Self {
         Self {
             boostrap: Bootstrap::new(),
+            executor,
         }
     }
 
@@ -58,7 +55,8 @@ impl<W: 'static> BootstrapTcp<W> {
 
         let max_payload_size = self.boostrap.max_payload_size;
 
-        spawn_local(async move {
+        let executor = self.executor.clone();
+        self.executor.spawn_local(async move {
             let _w = worker;
 
             let child_wg = WaitGroup::new();
@@ -76,13 +74,13 @@ impl<W: 'static> BootstrapTcp<W> {
                                 let pipeline_rd = (pipeline_factory_fn)();
                                 let child_close_rx = close_rx.clone();
                                 let child_worker = child_wg.worker();
-                                spawn_local(async move {
+                                executor.spawn_local(async move {
                                     let _ = Self::process_pipeline(socket,
                                                                    max_payload_size,
                                                                    pipeline_rd,
                                                                    child_close_rx,
                                                                    child_worker).await;
-                                }).detach();
+                                }).unwrap();
                             }
                             Err(err) => {
                                 warn!("listener accept error {}", err);
@@ -93,8 +91,7 @@ impl<W: 'static> BootstrapTcp<W> {
                 }
             }
             child_wg.wait().await;
-        })
-        .detach();
+        }).unwrap();
 
         Ok(local_addr)
     }
@@ -126,11 +123,10 @@ impl<W: 'static> BootstrapTcp<W> {
         let pipeline_wr = Rc::clone(&pipeline_rd);
         let max_payload_size = self.boostrap.max_payload_size;
 
-        spawn_local(async move {
+        self.executor.spawn_local(async move {
             let _ = Self::process_pipeline(socket, max_payload_size, pipeline_rd, close_rx, worker)
                 .await;
-        })
-        .detach();
+        }).unwrap();
 
         Ok(pipeline_wr)
     }

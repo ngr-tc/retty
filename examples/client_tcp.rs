@@ -8,7 +8,7 @@ use retty::codec::{
     byte_to_message_decoder::{LineBasedFrameDecoder, TaggedByteToMessageCodec, TerminatorType},
     string_codec::TaggedStringCodec,
 };
-use retty::executor::LocalExecutorBuilder;
+use retty::executor::LocalExecutor;
 use retty::transport::{Protocol, TaggedBytesMut, TaggedString, TransportContext};
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

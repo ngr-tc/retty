@@ -1,21 +1,15 @@
 use super::*;
 
 /// A Bootstrap that makes it easy to bootstrap a pipeline to use for UDP servers.
-pub struct BootstrapUdpServer<W> {
-    bootstrap_udp: BootstrapUdp<W>,
+pub struct BootstrapUdpServer<W, E: LocalExecutor+'static> {
+    bootstrap_udp: BootstrapUdp<W, E>,
 }
 
-impl<W: 'static> Default for BootstrapUdpServer<W> {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl<W: 'static> BootstrapUdpServer<W> {
+impl<W: 'static, E: LocalExecutor+'static> BootstrapUdpServer<W, E> {
     /// Creates a new BootstrapUdpServer
-    pub fn new() -> Self {
+    pub fn new(executor: E) -> Self {
         Self {
-            bootstrap_udp: BootstrapUdp::new(),
+            bootstrap_udp: BootstrapUdp::new(executor),
         }
     }
 

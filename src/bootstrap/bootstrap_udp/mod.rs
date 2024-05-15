@@ -2,28 +2,25 @@ use super::*;
 use crate::transport::Protocol;
 use async_transport::{AsyncUdpSocket, Capabilities, RecvMeta, Transmit, UdpSocket, BATCH_SIZE};
 use std::mem::MaybeUninit;
+use crate::executor::LocalExecutor;
 
 pub(crate) mod bootstrap_udp_client;
 pub(crate) mod bootstrap_udp_server;
 
-struct BootstrapUdp<W> {
+struct BootstrapUdp<W, E: LocalExecutor+'static> {
     boostrap: Bootstrap<W>,
 
     socket: Option<UdpSocket>,
+    executor: E,
 }
 
-impl<W: 'static> Default for BootstrapUdp<W> {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl<W: 'static> BootstrapUdp<W> {
-    fn new() -> Self {
+impl<W: 'static, E: LocalExecutor+'static> BootstrapUdp<W, E> {
+    fn new(executor: E) -> Self {
         Self {
             boostrap: Bootstrap::new(),
 
             socket: None,
+            executor
         }
     }
 
@@ -73,7 +70,7 @@ impl<W: 'static> BootstrapUdp<W> {
 
         let max_payload_size = self.boostrap.max_payload_size;
 
-        spawn_local(async move {
+        self.executor.spawn_local(async move {
             let _w = worker;
 
             let capabilities = Capabilities::new();
@@ -172,7 +169,7 @@ impl<W: 'static> BootstrapUdp<W> {
             }
             pipeline.transport_inactive();
         })
-        .detach();
+        .unwrap();
 
         Ok(pipeline_wr)
     }

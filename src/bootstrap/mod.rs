@@ -15,7 +15,6 @@ use std::{
 use waitgroup::{WaitGroup, Worker};
 
 use crate::channel::{InboundPipeline, OutboundPipeline, Pipeline};
-use crate::executor::spawn_local;
 use crate::transport::{TaggedBytesMut, TransportContext};
 
 mod bootstrap_tcp;

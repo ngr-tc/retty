@@ -11,18 +11,27 @@ homepage = "https://retty.io"
 keywords = ["networking", "protocols"]
 categories = ["network-programming", "asynchronous"]
 
+[features]
+full = ["tokio", "smol"]
+tokio = []
+smol = []
+
 [dependencies]
 bytes = "1.5.0"
 log = "0.4.21"
 waitgroup = "0.1.2"
-smol = "2.0.0"
 async-net = "2.0.0"
 scoped-tls = "1.0.1"
 async-broadcast = "0.7.0"
 futures-lite = "2.2.0"
-tokio = { version = "1.36.0", default-features = false, features = ["macros"] }
 async-transport = { version = "0.5.0", default-features = false, features = ["runtime-smol"] }
 core_affinity = "0.8.1"
+
+[dependencies.tokio]
+tokio = { version = "1.37.0", default-features = false, features = ["rt", "rt-multi-thread", "process"] }
+
+[dependencies.smol]
+smol = "2.0.0"
 
 [dev-dependencies]
 chrono = "0.4.35"
